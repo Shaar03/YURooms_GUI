@@ -16,6 +16,10 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import com.rooms.extractor.DataExtractor;
 
 public class FileChooserGUI extends Application {
 
@@ -49,15 +53,34 @@ public class FileChooserGUI extends Application {
     private void chooseFile(Stage stage) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel Files", "*.xlsx", "*.xls"));
-        File file = fileChooser.showOpenDialog(stage);
-        if (file != null) {
+        File selectedFile = fileChooser.showOpenDialog(stage);
+
+        if (selectedFile != null) {
             progressBar.setVisible(true); // Show the progress bar
             setStatus("Processing file...", Color.BLACK); // Change status to indicate processing
+
+            // Define the destination folder (src/main/java)
+            String destinationFolder = "src/main/resources/";
+
+            // Define the destination file path
+            String destinationFilePath = destinationFolder + selectedFile.getName();
+
+            // Create the destination file
+            File destinationFile = new File(destinationFilePath);
+
+            try {
+                // Copy the selected file to the destination folder
+                Files.copy(selectedFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+//                setStatus("File saved to: " + destinationFilePath, Color.GREEN);
+            } catch (IOException e) {
+                e.printStackTrace();
+                setStatus("Error saving file.", Color.RED);
+            }
+
             // Simulate processing (you can replace this with your actual processing logic)
             Task<Void> task = new Task<>() {
                 @Override
                 protected Void call() {
-                    // Simulate processing
                     for (int i = 0; i <= 100; i++) {
                         try {
                             Thread.sleep(50); // Simulate processing time
@@ -66,6 +89,7 @@ public class FileChooserGUI extends Application {
                         }
                         updateProgress(i, 100);
                     }
+                    DataExtractor.extractData(destinationFilePath);
                     return null;
                 }
             };
